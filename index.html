@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Форма заявки</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:#f6f8fb;color:#0c2f66;display:flex;align-items:center;justify-content:center;
+    min-height:100vh;padding:16px;
+  }
+  .form-box{
+    background:#fff;border-radius:12px;box-shadow:0 8px 22px rgba(0,0,0,.05);
+    padding:24px;width:min(400px,90vw);text-align:left;
+  }
+  h2{text-align:center;margin-bottom:20px;font-size:20px;color:#0c2f66}
+  .field{display:grid;gap:6px;margin-bottom:14px;}
+  label{font-size:14px;font-weight:600;}
+  input{
+    padding:10px;border:1px solid #DCE3EB;border-radius:8px;font-size:14px;background:#fff;
+  }
+  input:focus{outline:1px solid #0066FF;border-color:#BBD0EE;}
+  button{
+    width:100%;padding:12px;border:none;border-radius:8px;
+    background:#0066FF;color:#fff;font-weight:600;cursor:pointer;font-size:15px;
+  }
+  button:hover{background:#0053d1;}
+  .muted{margin-top:10px;font-size:12px;text-align:center;color:#7c8a9a;}
+
+  /* Ловушка для ботов */
+  #fakeBtn {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    overflow: hidden;
+    position: absolute;
+    left: -9999px;
+  }
+</style>
+</head>
+<body>
+
+<div class="form-box">
+  <h2>Получить консультацию</h2>
+  <div class="field"><label>Ваше имя</label><input id="name" placeholder="Иван"></div>
+  <div class="field"><label>Телефон</label><input id="phone" placeholder="+7 (900) 000-00-00"></div>
+  <input type="text" id="honeypot" style="display:none !important;">
+  
+  <!-- Кнопка для людей -->
+  <button id="sendBtn">Отправить</button>
+  <!-- Невидимая ловушка для ботов -->
+  <button id="fakeBtn" tabindex="-1">Не нажимай</button>
+
+  <div class="muted" id="status"></div>
+</div>
+
+<script src="https://unpkg.com/imask"></script>
+<script>
+const QUIZ_URL="https://openai-gpt-proxy-mcnj.onrender.com/quiz";
+const LEAD_URL="https://openai-gpt-proxy-mcnj.onrender.com/lead";
+
+const phone=document.getElementById("phone");
+IMask(phone,{mask:'+{7} (000) 000-00-00'});
+
+let events=[],last=Date.now();
+function pushEvent(type,label){const now=Date.now();events.push({type,label,intervalMs:now-last,timestamp:now});last=now;}
+
+// логируем действия
+["click","input","focus"].forEach(ev=>{
+  document.addEventListener(ev,e=>{
+    if(e.target.id==="honeypot")return;
+    pushEvent(ev,e.target.id||e.target.tagName);
+  },true);
+});
+
+// клик по фейковой кнопке = бан
+document.getElementById("fakeBtn").addEventListener("click",()=>{
+  pushEvent("fake_click","bot_suspect");
+});
+
+document.getElementById("sendBtn").addEventListener("click",async()=>{
+  pushEvent("click","submit");
+  const name=document.getElementById("name").value.trim();
+  const ph=phone.value.replace(/[^0-9+]/g,'');
+  const honeypot=document.getElementById("honeypot").value;
+  const status=document.getElementById("status");
+  if(honeypot)return;
+  if(!name||ph.length<10){status.textContent="Введите корректные данные";return;}
+  status.textContent="Проверяем...";
+  const userId=localStorage.getItem("userId")||("user_"+Math.random().toString(36).slice(2,10));
+  localStorage.setItem("userId",userId);
+  const duration=Date.now()-(events[0]?.timestamp||Date.now());
+  const payload={userId,answers:{name,phone:ph},events,phone:ph,honeypot,durationMs:duration};
+
+  try{
+    const check=await fetch(QUIZ_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const res=await check.json();
+
+    if(res.action==="deny"){status.textContent="⛔️ Похоже, это бот";return;}
+    status.textContent="Отправляем…";
+
+    await fetch(LEAD_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        name,phone:ph,userId,source:"form",no_summary:true,
+        answersSummary:`Форма: ${name}, ${ph}`,messages:[]
+      })
+    });
+    status.textContent="Готово ✔";
+  }catch(e){status.textContent="Ошибка соединения";}
+});
+</script>
+
+</body>
+</html>
