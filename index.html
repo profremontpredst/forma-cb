@@ -114,6 +114,10 @@ document.getElementById("sendBtn").addEventListener("click",async()=>{
       })
     });
     status.textContent="Готово ✔";
+   // Яндекс.Метрика - цель отправки заявки
+if (typeof ym !== 'undefined') {
+  ym(96579651, 'reachGoal', 'lead_submit');
+}
   }catch(e){status.textContent="Ошибка соединения";}
 });
 </script>
