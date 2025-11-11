@@ -114,10 +114,35 @@ document.getElementById("sendBtn").addEventListener("click",async()=>{
       })
     });
     status.textContent="Готово ✔";
+    setTimeout(() => {
+  // Скрываем форму
+  document.querySelector('.form-box').style.display = 'none';
+  
+  // Создаем блок спасибо
+  const thanksBox = document.createElement('div');
+  thanksBox.innerHTML = `
+    <div style="text-align: center; padding: 40px 20px;">
+      <img src="https://i.imgur.com/vTvjNeq.png" alt="Елена" style="width:90px;height:90px;border-radius:50%;margin-bottom:18px;object-fit:cover;">
+      <p style="font-size:17px;color:#0c2f66;font-weight:600;">Скоро свяжусь с вами</p>
+    </div>
+  `;
+  
+  // Добавляем стили для анимации
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fade { 
+      from { opacity: 0; transform: translateY(6px) } 
+      to { opacity: 1; transform: none }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Вставляем на место формы
+  thanksBox.style.animation = 'fade .4s ease';
+  document.body.appendChild(thanksBox);
+}, 800);
    // Яндекс.Метрика - цель отправки заявки
-if (typeof ym !== 'undefined') {
-  ym(96579651, 'reachGoal', 'lead_submit');
-}
+   if(res.action !== "deny" && typeof ym!=='undefined'){ym(96579651,'reachGoal','lead_submit');}
   }catch(e){status.textContent="Ошибка соединения";}
 });
 </script>
