@@ -102,14 +102,26 @@ const QUIZ_URL="https://openai-gpt-proxy-d2py.onrender.com/quiz";
 const LEAD_URL="https://openai-gpt-proxy-d2py.onrender.com/lead";
 // Сбор UTM параметров
 function getUTMParams() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return {
-        utm_source: urlParams.get('utm_source') || '',
-        utm_medium: urlParams.get('utm_medium') || '',
-        utm_campaign: urlParams.get('utm_campaign') || '',
-        utm_term: urlParams.get('utm_term') || '',
-        utm_content: urlParams.get('utm_content') || ''
-    };
+    try {
+        const parentUrl = window.parent.location.search;
+        const urlParams = new URLSearchParams(parentUrl);
+        return {
+            utm_source: urlParams.get('utm_source') || '',
+            utm_medium: urlParams.get('utm_medium') || '', 
+            utm_campaign: urlParams.get('utm_campaign') || '',
+            utm_term: urlParams.get('utm_term') || '',
+            utm_content: urlParams.get('utm_content') || ''
+        };
+    } catch(e) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+            utm_source: urlParams.get('utm_source') || '',
+            utm_medium: urlParams.get('utm_medium') || '',
+            utm_campaign: urlParams.get('utm_campaign') || '',
+            utm_term: urlParams.get('utm_term') || '',
+            utm_content: urlParams.get('utm_content') || ''
+        };
+    }
 }
 
 const phone=document.getElementById("phone");
