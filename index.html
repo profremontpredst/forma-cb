@@ -173,6 +173,7 @@ document.getElementById("sendBtn").addEventListener("click",async()=>{
     } else {
       // Отправляем лид если не бот
       const utmParams = getUTMParams();
+      console.log("UTM DEBUG:", utmParams);
 await fetch(LEAD_URL,{method:"POST",headers:{"Content-Type":"application/json"},
   body:JSON.stringify({
     name,phone:ph,userId,source:"form",no_summary:true,
