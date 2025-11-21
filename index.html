@@ -100,6 +100,17 @@
 <script>
 const QUIZ_URL="https://openai-gpt-proxy-d2py.onrender.com/quiz";
 const LEAD_URL="https://openai-gpt-proxy-d2py.onrender.com/lead";
+// Сбор UTM параметров
+function getUTMParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+        utm_source: urlParams.get('utm_source') || '',
+        utm_medium: urlParams.get('utm_medium') || '',
+        utm_campaign: urlParams.get('utm_campaign') || '',
+        utm_term: urlParams.get('utm_term') || '',
+        utm_content: urlParams.get('utm_content') || ''
+    };
+}
 
 const phone=document.getElementById("phone");
 IMask(phone,{mask:'+{7} (000) 000-00-00'});
@@ -161,12 +172,18 @@ document.getElementById("sendBtn").addEventListener("click",async()=>{
       // Можно тихо залогировать в отдельную таблицу
     } else {
       // Отправляем лид если не бот
-      await fetch(LEAD_URL,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          name,phone:ph,userId,source:"form",no_summary:true,
-          answersSummary:`Форма: ${name}, ${ph}`,messages:[]
-        })
-      });
+      const utmParams = getUTMParams();
+await fetch(LEAD_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    name,phone:ph,userId,source:"form",no_summary:true,
+    answersSummary:`Форма: ${name}, ${ph}`,messages:[],
+    utm_source: utmParams.utm_source,
+    utm_medium: utmParams.utm_medium,
+    utm_campaign: utmParams.utm_campaign,
+    utm_term: utmParams.utm_term,
+    utm_content: utmParams.utm_content
+  })
+});
       
       // Метрика только для не-ботов
       if(res.action !== "deny" && typeof ym!=='undefined'){
