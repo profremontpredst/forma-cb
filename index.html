@@ -97,6 +97,10 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
       throw new Error("GigaBot not loaded");
     }
 
+    if (!window.GigaBot._uid) {
+  window.GigaBot._uid = "user_" + Math.random().toString(36).slice(2, 10);
+}
+
     // 1) АНТИБОТ
     const result = await window.GigaBot.send({
       type: "form",
