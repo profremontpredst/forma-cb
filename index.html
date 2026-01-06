@@ -8,9 +8,9 @@
 <!-- ===== GIGABOT CONFIG ===== -->
 <script>
   window.GIGABOT_CONFIG = {
-    endpoint: "https://gigabot-db4r.onrender.com",            // АНТИБОТ (НЕ АДМИНКА)
-    siteId: "site_forma_cb_w2tq_onrender_com",                // ИЗ АДМИНКИ
-    publicKey: "pk_live_1d693ec428e364f045141b12"              // ИЗ АДМИНКИ
+    endpoint: "https://gigabot-db4r.onrender.com",
+    siteId: "site_forma_cb_w2tq_onrender_com",
+    publicKey: "pk_live_1d693ec428e364f045141b12"
   };
 </script>
 <script src="https://gigabot-admin-biea.onrender.com/gigabot.js" defer></script>
@@ -80,7 +80,7 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
   const status = document.getElementById("status");
   const btn = document.getElementById("submitBtn");
 
-  if (honeypot) return; // бот — молча
+  if (honeypot) return;
 
   if (!name || phone.length < 10) {
     status.textContent = "Введите корректные данные";
@@ -91,24 +91,37 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
   status.textContent = "Проверяем…";
 
   try {
+    // 1️⃣ АНТИБОТ
     const result = await window.GigaBot.send({
       type: "form",
       fields: { name, phone }
     });
 
-    // ВСЕ РЕШЕНИЯ АНТИБОТА ЗДЕСЬ
+    // 2️⃣ БОТ → НИЧЕГО НЕ ДЕЛАЕМ
     if (result.action === "deny") {
-      console.log("BOT:", result.reason);
       status.textContent = "Заявка принята";
       return;
     }
 
-    // человек
+    // 3️⃣ ЧЕЛОВЕК → СОЗДАЁМ ЛИД
+    await fetch("https://gigabot-db4r.onrender.com/lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        siteId: GIGABOT_CONFIG.siteId,
+        publicKey: GIGABOT_CONFIG.publicKey,
+        name,
+        phone
+      })
+    });
+
     status.textContent = "Заявка принята. Напишем в WhatsApp 👌";
 
   } catch (err) {
     console.error(err);
     status.textContent = "Ошибка, попробуйте позже";
+  } finally {
+    btn.disabled = false;
   }
 });
 </script>
