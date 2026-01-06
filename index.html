@@ -91,29 +91,29 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
   status.textContent = "Проверяем…";
 
   try {
-    // 1️⃣ АНТИБОТ
+    // 1) АНТИБОТ
     const result = await window.GigaBot.send({
       type: "form",
       fields: { name, phone }
     });
 
-    // 2️⃣ БОТ → НИЧЕГО НЕ ДЕЛАЕМ
+    // 2) DENY — просто молча
     if (result.action === "deny") {
       status.textContent = "Заявка принята";
       return;
     }
 
-    // 3️⃣ ЧЕЛОВЕК → СОЗДАЁМ ЛИД (С userId ДЛЯ АДМИНКИ)
-    await fetch("https://gigabot-db4r.onrender.com/lead", {
+    // 3) ALLOW / CHALLENGE — ОТПРАВЛЯЕМ ЛИД С userId
+    await fetch(window.GIGABOT_CONFIG.endpoint + "/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        siteId: GIGABOT_CONFIG.siteId,
-        publicKey: GIGABOT_CONFIG.publicKey,
-        userId: window.GigaBot && window.GigaBot._uid ? window.GigaBot._uid : "unknown",
+        siteId: window.GIGABOT_CONFIG.siteId,
+        publicKey: window.GIGABOT_CONFIG.publicKey,
+        userId: window.GigaBot._uid,
         name,
         phone,
-        utm: window.GigaBot && window.GigaBot._utm ? window.GigaBot._utm : {}
+        utm: window.GigaBot._utm
       })
     });
 
