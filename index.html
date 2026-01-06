@@ -103,15 +103,17 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
       return;
     }
 
-    // 3️⃣ ЧЕЛОВЕК → СОЗДАЁМ ЛИД
+    // 3️⃣ ЧЕЛОВЕК → СОЗДАЁМ ЛИД (С userId ДЛЯ АДМИНКИ)
     await fetch("https://gigabot-db4r.onrender.com/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         siteId: GIGABOT_CONFIG.siteId,
         publicKey: GIGABOT_CONFIG.publicKey,
+        userId: window.GigaBot && window.GigaBot._uid ? window.GigaBot._uid : "unknown",
         name,
-        phone
+        phone,
+        utm: window.GigaBot && window.GigaBot._utm ? window.GigaBot._utm : {}
       })
     });
 
