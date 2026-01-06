@@ -4,230 +4,72 @@
 <meta charset="UTF-8">
 <title>Форма заявки</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ===== GIGABOT CONFIG (ЕДИНСТВЕННОЕ, ЧТО НУЖНО) ===== -->
+<script>
+  window.GIGABOT_CONFIG = {
+    endpoint: "https://gigabot-db4r.onrender.com",   // АНТИБОТ (НЕ АДМИНКА)
+    siteId: "site_demo",                              // ИЗ АДМИНКИ
+    publicKey: "pk_live_site_demo_001"                // ИЗ АДМИНКИ
+  };
+</script>
+<script src="https://gigabot-admin-biea.onrender.com/gigabot.js" defer></script>
+
 <style>
- body { background: transparent !important; }
-.form-box { 
-    background: #fff !important; 
-    box-shadow: 0 8px 22px rgba(0,0,0,.05) !important; 
-    border-radius: 12px !important;
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  background:#f6f8fb;color:#0c2f66;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:16px;
 }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-    background:#f6f8fb;color:#0c2f66;display:flex;align-items:center;justify-content:center;
-    min-height:100vh;padding:16px;
-  }
-  .form-box{
-    background:#fff;border-radius:12px;box-shadow:0 8px 22px rgba(0,0,0,.05);
-    padding:24px;width:min(400px,90vw);text-align:left;
-  }
-  h2{text-align:center;margin-bottom:20px;font-size:20px;color:#0c2f66}
-  .field{display:grid;gap:6px;margin-bottom:14px;}
-  label{font-size:14px;font-weight:600;}
-  input{
-    padding:10px;border:1px solid #DCE3EB;border-radius:8px;font-size:14px;background:#fff;
-  }
-  input:focus{outline:1px solid #0066FF;border-color:#BBD0EE;}
-  button{
-    width:100%;padding:12px;border:none;border-radius:8px;
-    background:#0066FF;color:#fff;font-weight:600;cursor:pointer;font-size:15px;
-  }
-  button:hover{background:#0053d1;}
-  .muted{margin-top:10px;font-size:12px;text-align:center;color:#7c8a9a;}
-
-  /* Ловушка для ботов */
-  #fakeBtn {
-    opacity: 0;
-    height: 0;
-    width: 0;
-    overflow: hidden;
-    position: absolute;
-    left: -9999px;
-  }
-
-  /* Стили для экрана получения заявки */
-  .receiving-box {
-    text-align: center;
-    padding: 40px 20px;
-    animation: fade .4s ease;
-  }
-  .pulse-img {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    margin-bottom: 18px;
-    object-fit: cover;
-    animation: pulse 2s infinite;
-  }
-  .receiving-text {
-    font-size: 17px;
-    color: #0c2f66;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-  .receiving-subtext {
-    font-size: 14px;
-    color: #7c8a9a;
-  }
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-  }
-  @keyframes fade { 
-    from { opacity: 0; transform: translateY(6px) } 
-    to { opacity: 1; transform: none }
-  }
+.form-box{
+  background:#fff;border-radius:12px;
+  box-shadow:0 8px 22px rgba(0,0,0,.08);
+  padding:24px;width:min(400px,90vw);
+}
+h2{text-align:center;margin-bottom:20px;font-size:20px}
+.field{display:grid;gap:6px;margin-bottom:14px}
+label{font-size:14px;font-weight:600}
+input{
+  padding:10px;border:1px solid #DCE3EB;
+  border-radius:8px;font-size:14px
+}
+button{
+  width:100%;padding:12px;border:none;border-radius:8px;
+  background:#0066FF;color:#fff;font-weight:600;
+  cursor:pointer;font-size:15px
+}
+button:hover{background:#0053d1}
+.muted{margin-top:10px;font-size:12px;text-align:center;color:#7c8a9a}
 </style>
 </head>
+
 <body>
 
 <div class="form-box">
-  <h2>Оставьте номер вашего WhatsApp чтобы получить консультацию без звонков</h2>
-  <div class="field"><label>Ваше имя</label><input id="name" placeholder="Иван"></div>
-  <div class="field"><label>Телефон</label><input id="phone" placeholder="+7 (900) 000-00-00"></div>
-  <input type="text" id="honeypot" style="display:none !important;">
-  
-  <!-- Кнопка для людей -->
-  <button id="sendBtn">Отправить</button>
-  <!-- Невидимая ловушка для ботов -->
-  <button id="fakeBtn" tabindex="-1">Не нажимай</button>
+  <h2>Оставьте номер WhatsApp</h2>
 
-  <div class="muted" id="status"></div>
-</div>
-
-<script src="https://unpkg.com/imask"></script>
-<script>
-const QUIZ_URL="https://openai-gpt-proxy-d2py.onrender.com/quiz";
-const LEAD_URL="https://openai-gpt-proxy-d2py.onrender.com/lead";
-// Сбор UTM параметров
-function getUTMParams() {
-    try {
-        const parentUrl = window.parent.location.search;
-        const urlParams = new URLSearchParams(parentUrl);
-        return {
-            utm_source: urlParams.get('utm_source') || '',
-            utm_medium: urlParams.get('utm_medium') || '', 
-            utm_campaign: urlParams.get('utm_campaign') || '',
-            utm_term: urlParams.get('utm_term') || '',
-            utm_content: urlParams.get('utm_content') || ''
-        };
-    } catch(e) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return {
-            utm_source: urlParams.get('utm_source') || '',
-            utm_medium: urlParams.get('utm_medium') || '',
-            utm_campaign: urlParams.get('utm_campaign') || '',
-            utm_term: urlParams.get('utm_term') || '',
-            utm_content: urlParams.get('utm_content') || ''
-        };
-    }
-}
-
-const phone=document.getElementById("phone");
-IMask(phone,{mask:'+{7} (000) 000-00-00'});
-
-let events=[],last=Date.now();
-function pushEvent(type,label){const now=Date.now();events.push({type,label,intervalMs:now-last,timestamp:now});last=now;}
-
-// логируем действия
-["click","input","focus"].forEach(ev=>{
-  document.addEventListener(ev,e=>{
-    if(e.target.id==="honeypot")return;
-    pushEvent(ev,e.target.id||e.target.tagName);
-  },true);
-});
-
-// клик по фейковой кнопке = бан
-document.getElementById("fakeBtn").addEventListener("click",()=>{
-  pushEvent("fake_click","bot_suspect");
-});
-
-document.getElementById("sendBtn").addEventListener("click",async()=>{
-  pushEvent("click","submit");
-  const name=document.getElementById("name").value.trim();
-  const ph=phone.value.replace(/[^0-9+]/g,'');
-  const honeypot=document.getElementById("honeypot").value;
-  const status=document.getElementById("status");
-  
-  // Валидация
-  if(honeypot)return;
-  if(!name||ph.length<10){status.textContent="Введите корректные данные";return;}
-  
-  // Блокируем повторные отправки
-  document.getElementById("sendBtn").disabled = true;
-  
-  // МГНОВЕННО показываем экран получения заявки
-  const formBox = document.querySelector('.form-box');
-  formBox.innerHTML = `
-    <div class="receiving-box">
-      <img src="https://i.imgur.com/vTvjNeq.png" alt="Елена" class="pulse-img">
-      <div class="receiving-text">Получила вашу заявку</div>
-      <div class="receiving-subtext">Получила ваш контакт, сейчас напишу вам</div>
+  <!-- ❗ ОБЫЧНАЯ ФОРМА -->
+  <form method="POST" action="/success.html">
+    <div class="field">
+      <label>Ваше имя</label>
+      <input name="name" placeholder="Иван" required>
     </div>
-  `;
 
-  // ФОНГОМ делаем всю проверку и отправку
-  const userId=localStorage.getItem("userId")||("user_"+Math.random().toString(36).slice(2,10));
-  localStorage.setItem("userId",userId);
-  const duration=Date.now()-(events[0]?.timestamp||Date.now());
-  const payload={userId,answers:{name,phone:ph},events,phone:ph,honeypot,durationMs:duration};
+    <div class="field">
+      <label>Телефон</label>
+      <input name="phone" placeholder="+7 (900) 000-00-00" required>
+    </div>
 
-  try{
-    // Проверка антиботом
-    const check=await fetch(QUIZ_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-    const res=await check.json();
+    <!-- honeypot (НЕ ТРОГАТЬ) -->
+    <input type="text" name="company" style="display:none">
 
-    // Если бот - логируем но не показываем пользователю
-    if(res.action==="deny"){
-      console.log("Bot detected:", res.reason);
-      // Можно тихо залогировать в отдельную таблицу
-    } else {
-      // Отправляем лид если не бот
-      const utmParams = getUTMParams();
-      console.log("UTM DEBUG:", utmParams);
-await fetch(LEAD_URL,{method:"POST",headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({
-    name,phone:ph,userId,source:"form",no_summary:true,
-    answersSummary:`Форма: ${name}, ${ph}`,messages:[],
-    utm_source: utmParams.utm_source,
-    utm_medium: utmParams.utm_medium,
-    utm_campaign: utmParams.utm_campaign,
-    utm_term: utmParams.utm_term,
-    utm_content: utmParams.utm_content
-  })
-});
-      
-      // Метрика только для не-ботов
-      if(res.action !== "deny" && typeof ym!=='undefined'){
-        ym(96579651,'reachGoal','lead_submit');
-      }
-    }
+    <button type="submit">Отправить</button>
+  </form>
 
-    // Через 2 секунды показываем финальное спасибо (вне зависимости от результата антибота)
-    setTimeout(() => {
-      formBox.innerHTML = `
-        <div class="receiving-box">
-          <img src="https://i.imgur.com/vTvjNeq.png" alt="Елена" style="width:90px;height:90px;border-radius:50%;margin-bottom:18px;object-fit:cover;">
-          <div class="receiving-text">Получила ваш контакт, сейчас напишу вам</div>
-        </div>
-      `;
-    }, 2000);
-
-  }catch(e){
-    // В случае ошибки всё равно показываем спасибо, но логируем ошибку
-    console.error("Submission error:", e);
-    setTimeout(() => {
-      formBox.innerHTML = `
-        <div class="receiving-box">
-          <img src="https://i.imgur.com/vTvjNeq.png" alt="Елена" style="width:90px;height:90px;border-radius:50%;margin-bottom:18px;object-fit:cover;">
-          <div class="receiving-text">Получила ваш контакт, сейчас напишу вам</div>
-        </div>
-      `;
-    }, 2000);
-  }
-});
-</script>
+  <div class="muted">Без звонков. Напишем в WhatsApp</div>
+</div>
 
 </body>
 </html>
