@@ -13,7 +13,6 @@
     publicKey: "pk_live_1d693ec428e364f045141b12"
   };
 </script>
-<script src="https://gigabot-admin-biea.onrender.com/gigabot.js" defer></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -70,6 +69,9 @@ button:disabled{opacity:.6}
   <div class="muted" id="status"></div>
 </div>
 
+<!-- ===== GIGABOT SCRIPT (БЕЗ defer, ВНИЗУ) ===== -->
+<script src="https://gigabot-admin-biea.onrender.com/gigabot.js"></script>
+
 <script>
 document.getElementById("leadForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -91,20 +93,24 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
   status.textContent = "Проверяем…";
 
   try {
+    if (!window.GigaBot || typeof window.GigaBot.send !== "function") {
+      throw new Error("GigaBot not loaded");
+    }
+
     // 1) АНТИБОТ
     const result = await window.GigaBot.send({
       type: "form",
-      fields: { name, phone }
+      fields: { name, phone, honeypot }
     });
 
-    // 2) DENY — просто молча
-    if (result.action === "deny") {
+    // 2) BLOCK / DENY — МОЛЧА
+    if (result.action !== "allow" && result.action !== "challenge") {
       status.textContent = "Заявка принята";
       return;
     }
 
-    // 3) ALLOW / CHALLENGE — ОТПРАВЛЯЕМ ЛИД С userId
-    await fetch(window.GIGABOT_CONFIG.endpoint + "/lead", {
+    // 3) ALLOW / CHALLENGE — ЛИД
+    const r = await fetch(window.GIGABOT_CONFIG.endpoint + "/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -116,6 +122,8 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
         utm: window.GigaBot._utm
       })
     });
+
+    if (!r.ok) throw new Error("Lead request failed");
 
     status.textContent = "Заявка принята. Напишем в WhatsApp 👌";
 
